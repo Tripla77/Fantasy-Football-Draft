@@ -29,6 +29,7 @@ export function PlayerRow({ player, drafted, onDraft, onDraftMine, onUndraft }: 
           <TierBadge pos={player.pos} tier={player.tier} />
           <Text style={styles.meta}>{player.team}</Text>
           <Text style={styles.meta}>ADP {player.adp.toFixed(1)}</Text>
+          {player.injury ? <Text style={styles.injury}>{player.injury}</Text> : null}
         </View>
       </View>
 
@@ -108,6 +109,11 @@ const styles = StyleSheet.create({
   meta: {
     color: colors.textDim,
     fontSize: 12,
+  },
+  injury: {
+    color: colors.warning,
+    fontSize: 11,
+    fontWeight: '700',
   },
   valueCol: {
     alignItems: 'flex-end',

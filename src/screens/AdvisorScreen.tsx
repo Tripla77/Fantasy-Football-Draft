@@ -10,13 +10,14 @@ export function AdvisorScreen() {
   const availableRanked = useDraftStore((s) => s.availableRanked);
   const myRoster = useDraftStore((s) => s.myRoster);
   const settings = useDraftStore((s) => s.settings);
+  const rawPlayers = useDraftStore((s) => s.players);
   const draftedIds = useDraftStore((s) => s.draftedIds);
   const myRosterIds = useDraftStore((s) => s.myRosterIds);
   const draftToMyTeam = useDraftStore((s) => s.draftToMyTeam);
 
   const suggestions = useMemo(
     () => suggestPicks(availableRanked(), myRoster(), settings, 8),
-    [draftedIds, myRosterIds, settings, availableRanked, myRoster]
+    [draftedIds, myRosterIds, settings, rawPlayers, availableRanked, myRoster]
   );
 
   const top = suggestions[0];

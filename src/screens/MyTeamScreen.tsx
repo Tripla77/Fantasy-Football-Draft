@@ -22,10 +22,11 @@ const SLOT_LABELS: Record<string, string> = {
 export function MyTeamScreen() {
   const myRoster = useDraftStore((s) => s.myRoster);
   const settings = useDraftStore((s) => s.settings);
+  const rawPlayers = useDraftStore((s) => s.players);
   const myRosterIds = useDraftStore((s) => s.myRosterIds);
   const undraftPlayer = useDraftStore((s) => s.undraftPlayer);
 
-  const roster = useMemo(() => myRoster(), [myRosterIds, myRoster]);
+  const roster = useMemo(() => myRoster(), [myRosterIds, rawPlayers, myRoster]);
   const slots = useMemo(() => fillRoster(roster, settings), [roster, settings]);
   const needs = useMemo(() => positionNeeds(roster, settings), [roster, settings]);
 

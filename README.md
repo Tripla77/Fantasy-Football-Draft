@@ -50,31 +50,54 @@ npm run typecheck    # tsc --noEmit
 
 ## The player data
 
-`src/data/players.json` is a **bundled seed dataset** (~220 players: rank, ADP,
-projection, tier, position, team) — no API keys, works offline. Projections are
-**standard scoring**; Half/Full PPR apply an approximate per-position bump.
+The app pulls **live data from the free, no-auth [Sleeper API](https://docs.sleeper.com/)**
+(`GET https://api.sleeper.app/v1/players/nfl`) and falls back to a bundled dataset when
+offline. See `src/lib/dataSource.ts`.
 
-**It's meant to be edited.** Refresh the numbers each season, or replace it with your
-own export (e.g. FantasyPros). Keep the shape:
+**What's live vs. modeled:**
+
+| Field | Source |
+| --- | --- |
+| Player, team, position, injury status | **Live** — Sleeper |
+| Overall rank / draft order | **Live** — Sleeper `search_rank` (consensus relevance) |
+| ADP | Estimated from the live rank (Sleeper has no public ADP) |
+| Season projection | **Modeled** — a per-position value curve anchored to rank |
+
+Sleeper doesn't expose projections or ADP for free, so those are modeled so that VOR,
+tiers, and the advisor stay meaningful. They're transparent estimates — swap in a paid
+projections feed (e.g. FantasyPros) later for exact numbers by editing `dataSource.ts`.
+
+**How refresh works:**
+
+- On launch the app shows cached/bundled data instantly, then refreshes from Sleeper in
+  the background (if the cache is older than 12h). The live pull is cached to
+  `AsyncStorage`, so it works offline afterward.
+- **Settings → Player data** shows the current source (Live / Cached / Bundled), the
+  player count, and a **Refresh** button to pull the latest on demand.
+- If Sleeper is unreachable, the app keeps working on cached/bundled data and says so.
+
+### Offline fallback dataset
+
+`src/data/players.json` is the bundled seed (~220 players) used when there's no live
+data. It's editable — keep the shape:
 
 ```json
 { "id": "p001", "name": "Player Name", "pos": "RB", "team": "SF",
   "rank": 1, "adp": 1.2, "projection": 312, "tier": 1 }
 ```
 
-`pos` must be one of `QB | RB | WR | TE | K | DST`. A live-API or CSV-import path can be
-added as a follow-up.
+`pos` must be one of `QB | RB | WR | TE | K | DST`.
 
 ## Project structure
 
 ```
 App.tsx                  # entry + bottom tab navigation
 src/
-  data/players.json      # editable seed dataset
+  data/players.json      # offline fallback dataset
   types.ts               # shared types
   theme.ts               # colors / position palette
-  store/draftStore.ts    # zustand store + AsyncStorage persistence
-  lib/                   # scoring (VOR), roster fill, advisor
+  store/draftStore.ts    # zustand store + live-data + AsyncStorage persistence
+  lib/                   # dataSource (Sleeper), scoring (VOR), roster fill, advisor
   screens/               # Board, Tiers, Advisor, My Team, Settings
   components/            # PlayerRow, TierBadge, PositionFilter, StatPill
 ```

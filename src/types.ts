@@ -13,6 +13,8 @@ export interface Player {
   projection: number;
   /** Tier within the player's position (1 = elite). */
   tier: number;
+  /** Injury status from the live source (e.g. "Questionable", "IR"), if any. */
+  injury?: string | null;
 }
 
 /** A player enriched with computed value metrics. */

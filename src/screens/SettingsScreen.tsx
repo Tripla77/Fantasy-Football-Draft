@@ -1,8 +1,25 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useDraftStore } from '../store/draftStore';
+import { DataSourceKind } from '../lib/dataSource';
 import { Settings } from '../types';
 import { colors } from '../theme';
+
+const SOURCE_LABEL: Record<DataSourceKind, string> = {
+  live: 'Live · Sleeper API',
+  cache: 'Cached (last live pull)',
+  bundled: 'Bundled seed data',
+};
+
+function timeAgo(ts: number | null): string {
+  if (!ts) return 'never';
+  const mins = Math.round((Date.now() - ts) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs} hr ago`;
+  return `${Math.round(hrs / 24)} d ago`;
+}
 
 const SCORING: { key: Settings['scoring']; label: string }[] = [
   { key: 'standard', label: 'Standard' },
@@ -25,6 +42,12 @@ export function SettingsScreen() {
   const settings = useDraftStore((s) => s.settings);
   const updateSettings = useDraftStore((s) => s.updateSettings);
   const resetDraft = useDraftStore((s) => s.resetDraft);
+  const dataSource = useDraftStore((s) => s.dataSource);
+  const fetchedAt = useDraftStore((s) => s.fetchedAt);
+  const dataLoading = useDraftStore((s) => s.dataLoading);
+  const dataError = useDraftStore((s) => s.dataError);
+  const refreshData = useDraftStore((s) => s.refreshData);
+  const playerCount = useDraftStore((s) => s.players.length);
 
   const setStarter = (key: StarterKey, delta: number) => {
     const next = Math.max(0, settings.starters[key] + delta);
@@ -33,6 +56,47 @@ export function SettingsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.section}>Player data</Text>
+      <View style={styles.dataCard}>
+        <View style={styles.dataRow}>
+          <View style={{ flex: 1 }}>
+            <View style={styles.sourceLine}>
+              <View
+                style={[
+                  styles.dot,
+                  { backgroundColor: dataSource === 'live' ? colors.accent : colors.warning },
+                ]}
+              />
+              <Text style={styles.sourceText}>{SOURCE_LABEL[dataSource]}</Text>
+            </View>
+            <Text style={styles.dataMeta}>
+              {playerCount} players · updated {timeAgo(fetchedAt)}
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => refreshData()}
+            disabled={dataLoading}
+            style={[styles.refreshBtn, dataLoading && styles.refreshBtnDisabled]}
+          >
+            {dataLoading ? (
+              <ActivityIndicator color="#0b1220" size="small" />
+            ) : (
+              <Text style={styles.refreshText}>Refresh</Text>
+            )}
+          </Pressable>
+        </View>
+        {dataError ? (
+          <Text style={styles.dataError}>
+            Couldn’t reach the live source ({dataError}). Showing {dataSource} data.
+          </Text>
+        ) : (
+          <Text style={styles.dataNote}>
+            Live players, teams, injuries & rankings from Sleeper (free). Projections are
+            modeled from rank and are editable estimates.
+          </Text>
+        )}
+      </View>
+
       <Text style={styles.section}>Scoring</Text>
       <View style={styles.segment}>
         {SCORING.map((s) => (
@@ -159,6 +223,32 @@ const styles = StyleSheet.create({
   stepBtnText: { color: colors.text, fontSize: 20, fontWeight: '700' },
   stepValue: { color: colors.text, fontSize: 16, fontWeight: '800', minWidth: 20, textAlign: 'center' },
   note: { color: colors.textDim, fontSize: 12, lineHeight: 18, marginTop: 8 },
+  dataCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 12,
+    gap: 8,
+  },
+  dataRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  sourceLine: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dot: { width: 10, height: 10, borderRadius: 5 },
+  sourceText: { color: colors.text, fontWeight: '700', fontSize: 14 },
+  dataMeta: { color: colors.textDim, fontSize: 12, marginTop: 4 },
+  refreshBtn: {
+    backgroundColor: colors.accent,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    minWidth: 84,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  refreshBtnDisabled: { opacity: 0.7 },
+  refreshText: { color: '#0b1220', fontWeight: '800', fontSize: 13 },
+  dataNote: { color: colors.textDim, fontSize: 12, lineHeight: 17 },
+  dataError: { color: colors.warning, fontSize: 12, lineHeight: 17 },
   reset: {
     backgroundColor: colors.surface,
     borderRadius: 10,

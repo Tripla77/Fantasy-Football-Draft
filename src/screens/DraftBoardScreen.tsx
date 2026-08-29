@@ -12,10 +12,13 @@ const FLEX_POS = ['RB', 'WR', 'TE'];
 export function DraftBoardScreen() {
   const allRanked = useDraftStore((s) => s.allRanked);
   const settings = useDraftStore((s) => s.settings);
+  const rawPlayers = useDraftStore((s) => s.players);
   const draftedIds = useDraftStore((s) => s.draftedIds);
   const draftPlayer = useDraftStore((s) => s.draftPlayer);
   const draftToMyTeam = useDraftStore((s) => s.draftToMyTeam);
   const undraftPlayer = useDraftStore((s) => s.undraftPlayer);
+  const dataSource = useDraftStore((s) => s.dataSource);
+  const dataLoading = useDraftStore((s) => s.dataLoading);
 
   const [query, setQuery] = useState('');
   const [pos, setPos] = useState<PositionFilterValue>('ALL');
@@ -24,8 +27,8 @@ export function DraftBoardScreen() {
 
   const drafted = useMemo(() => new Set(draftedIds), [draftedIds]);
 
-  // Recompute ranked list when settings or draft state change.
-  const players = useMemo(() => allRanked(), [settings, allRanked]);
+  // Recompute ranked list when settings or the underlying dataset change.
+  const players = useMemo(() => allRanked(), [settings, rawPlayers, allRanked]);
 
   const rows = useMemo(() => {
     let list: RankedPlayer[] = players;
@@ -72,7 +75,10 @@ export function DraftBoardScreen() {
             </Text>
           </Pressable>
         </View>
-        <Text style={styles.count}>{remaining} available · {drafted.size} off the board</Text>
+        <Text style={styles.count}>
+          {remaining} available · {drafted.size} off the board ·{' '}
+          {dataLoading ? 'syncing live…' : dataSource === 'live' ? 'live data' : 'offline data'}
+        </Text>
       </View>
 
       <FlatList

@@ -11,12 +11,16 @@ const FLEX_POS: Position[] = ['RB', 'WR', 'TE'];
 export function TiersScreen() {
   const availableRanked = useDraftStore((s) => s.availableRanked);
   const settings = useDraftStore((s) => s.settings);
+  const rawPlayers = useDraftStore((s) => s.players);
   const draftedIds = useDraftStore((s) => s.draftedIds);
   const draftToMyTeam = useDraftStore((s) => s.draftToMyTeam);
 
   const [pos, setPos] = useState<PositionFilterValue>('RB');
 
-  const available = useMemo(() => availableRanked(), [settings, draftedIds, availableRanked]);
+  const available = useMemo(
+    () => availableRanked(),
+    [settings, rawPlayers, draftedIds, availableRanked]
+  );
 
   const positions: Position[] =
     pos === 'ALL'
