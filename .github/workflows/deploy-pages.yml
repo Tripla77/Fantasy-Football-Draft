@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - claude/fantasy-football-analytics-web-33gzee
   workflow_dispatch:
 
 # Allow the workflow to publish to GitHub Pages.
