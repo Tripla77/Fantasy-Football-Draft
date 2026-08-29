@@ -1,0 +1,62 @@
+name: Deploy web preview to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - claude/fantasy-football-analytics-web-33gzee
+  workflow_dispatch:
+
+# Allow the workflow to publish to GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; don't cancel an in-progress deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Export web build
+        # EXPO_BASE_URL makes assets resolve under the project-page subpath.
+        env:
+          EXPO_BASE_URL: /${{ github.event.repository.name }}
+        run: npx expo export --platform web
+
+      - name: Prepare static output
+        run: |
+          # Bypass Jekyll so the _expo/ asset folder is served.
+          touch dist/.nojekyll
+          # SPA fallback so deep links / refreshes serve the app.
+          cp dist/index.html dist/404.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

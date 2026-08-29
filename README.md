@@ -20,6 +20,18 @@ Settings.
 - **Settings** — scoring format, league size, and starting-lineup slots. Changing them
   recomputes replacement levels and VOR everywhere. Draft state persists across refreshes.
 
+## Live preview (GitHub Pages)
+
+Every push builds the web app and deploys it to GitHub Pages via
+`.github/workflows/deploy-pages.yml`. Once enabled it's live at:
+
+**https://aallisonvow.github.io/Fantasy-Football-Draft/**
+
+First-time setup (one switch): repo **Settings → Pages → Build and deployment →
+Source: GitHub Actions**. Then re-run the "Deploy web preview to GitHub Pages" workflow
+(Actions tab) if the first run was before you flipped it. The CI build sets
+`EXPO_BASE_URL` so assets resolve under the `/Fantasy-Football-Draft/` subpath.
+
 ## Getting started
 
 ```bash
