@@ -1,5 +1,11 @@
 import { Position } from './types';
 
+/**
+ * Bottom padding for scrollable screen content so the last items clear the
+ * floating (absolutely-positioned) tab bar and aren't hidden behind it.
+ */
+export const tabBarInset = 120;
+
 export const colors = {
   bg: '#0b1220',
   surface: '#141d30',
