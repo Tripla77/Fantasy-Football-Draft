@@ -6,7 +6,7 @@ import { useDraftStore } from '../store/draftStore';
 import { fillRoster, positionNeeds } from '../lib/roster';
 import { adjustedProjection } from '../lib/scoring';
 import { Position } from '../types';
-import { colors } from '../theme';
+import { colors, tabBarInset } from '../theme';
 
 const SLOT_LABELS: Record<string, string> = {
   QB: 'QB',
@@ -94,7 +94,7 @@ export function MyTeamScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 14, gap: 10 },
+  container: { padding: 14, gap: 10, paddingBottom: tabBarInset },
   summary: { flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
   needsBox: {
     backgroundColor: colors.surface,
