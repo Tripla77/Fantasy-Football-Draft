@@ -4,7 +4,7 @@ import { PositionFilter, PositionFilterValue } from '../components/PositionFilte
 import { StatPill } from '../components/StatPill';
 import { useDraftStore } from '../store/draftStore';
 import { Position, RankedPlayer } from '../types';
-import { colors, positionColors, tabBarInset } from '../theme';
+import { colors, positionColors } from '../theme';
 
 const FLEX_POS: Position[] = ['RB', 'WR', 'TE'];
 
@@ -116,7 +116,7 @@ function PositionTiers({
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 14, gap: 12, paddingBottom: tabBarInset },
+  container: { padding: 14, gap: 12 },
   intro: { color: colors.textDim, fontSize: 13, lineHeight: 18 },
   posBlock: { gap: 8 },
   posHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },

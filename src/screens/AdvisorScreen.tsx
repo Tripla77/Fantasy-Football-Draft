@@ -4,7 +4,7 @@ import { TierBadge } from '../components/TierBadge';
 import { StatPill } from '../components/StatPill';
 import { useDraftStore } from '../store/draftStore';
 import { suggestPicks } from '../lib/advisor';
-import { colors, tabBarInset } from '../theme';
+import { colors } from '../theme';
 
 export function AdvisorScreen() {
   const availableRanked = useDraftStore((s) => s.availableRanked);
@@ -69,7 +69,7 @@ export function AdvisorScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 14, gap: 12, paddingBottom: tabBarInset },
+  container: { padding: 14, gap: 12 },
   intro: { color: colors.textDim, fontSize: 13, lineHeight: 18 },
   hero: {
     backgroundColor: colors.surface,
