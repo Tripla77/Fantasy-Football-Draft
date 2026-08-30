@@ -48,10 +48,10 @@ export default function App() {
       '#app-header{padding-top:calc(14px + env(safe-area-inset-top,0px))}' +
       '#app-tabbar{' +
       // Float just above the home indicator. The safe-area inset (~34px in an
-      // installed PWA) overshoots the indicator's actual height, so resting at
-      // the full inset still looks too high; trim a fixed amount off it to hug
-      // closer. A browser reports ~0, so max() keeps a small 8px float there.
-      'bottom:max(8px,calc(env(safe-area-inset-bottom) - 16px));' +
+      // installed PWA) overshoots the indicator's actual height, so trim a
+      // fixed amount off it to hug close to the bottom. A browser reports ~0,
+      // so max() keeps a small 6px float there.
+      'bottom:max(6px,calc(env(safe-area-inset-bottom) - 24px));' +
       'padding-bottom:8px;' +
       'background:linear-gradient(180deg,rgba(31,43,68,0.78),rgba(15,22,38,0.70));' +
       'backdrop-filter:blur(22px) saturate(160%);' +
