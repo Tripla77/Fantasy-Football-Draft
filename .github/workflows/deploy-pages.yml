@@ -41,7 +41,12 @@ jobs:
         run: |
           # Bypass Jekyll so the _expo/ asset folder is served.
           touch dist/.nojekyll
-          # SPA fallback so deep links / refreshes serve the app.
+          # Paint the page + mobile browser chrome to match the app's dark
+          # background (#0b1220, from src/theme.ts) so browsers don't show white
+          # bars in the status-bar / safe-area regions above and below the app.
+          node -e "const fs=require('fs');const f='dist/index.html';let h=fs.readFileSync(f,'utf8');h=h.replace('</head>','    <meta name=\"theme-color\" content=\"#0b1220\" />\n    <style>html,body{background-color:#0b1220}</style>\n  </head>');fs.writeFileSync(f,h);"
+          # SPA fallback so deep links / refreshes serve the app (after the
+          # theme injection so 404.html gets the same background).
           cp dist/index.html dist/404.html
 
       - uses: actions/configure-pages@v5
