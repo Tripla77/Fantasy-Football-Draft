@@ -32,6 +32,24 @@ Source: GitHub Actions**. Then re-run the "Deploy web preview to GitHub Pages" w
 (Actions tab) if the first run was before you flipped it. The CI build sets
 `EXPO_BASE_URL` so assets resolve under the `/Fantasy-Football-Draft/` subpath.
 
+### Install as an app (PWA)
+
+The preview ships a web manifest and home-screen icons, so you can install it:
+
+- **iOS Safari** — Share → *Add to Home Screen*.
+- **Android/Chrome/desktop** — *Install app* from the address bar / menu.
+
+It opens standalone (no browser chrome), and the header and tab bar are padded by
+the device safe-area insets so the nav clears the notch and home indicator.
+
+The icons live in `web/` (`icon.svg` is the source). To regenerate the PNGs after
+editing the SVG:
+
+```bash
+npx sharp-cli -i web/icon.svg -o web/icon-192.png resize 192 192
+# ...or any SVG→PNG tool, exporting 192, 512 and a 180px apple-touch-icon.
+```
+
 ## Getting started
 
 ```bash

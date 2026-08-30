@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { DraftBoardScreen } from './src/screens/DraftBoardScreen';
 import { TiersScreen } from './src/screens/TiersScreen';
@@ -36,10 +36,23 @@ export default function App() {
     hydrate();
   }, [hydrate]);
 
+  // On web, pad the header and tab bar by the device safe-area insets so the
+  // nav clears the status bar and home indicator when installed as a PWA.
+  // (Relies on viewport-fit=cover, set on the web build's viewport meta.)
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const el = document.createElement('style');
+    el.textContent =
+      '#app-header{padding-top:calc(14px + env(safe-area-inset-top,0px))}' +
+      '#app-tabbar{padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}';
+    document.head.appendChild(el);
+    return () => el.remove();
+  }, []);
+
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
-      <View style={styles.header}>
+      <View nativeID="app-header" style={styles.header}>
         <Text style={styles.brand}>🏈 Draft HQ</Text>
         <Text style={styles.title}>{TITLES[tab]}</Text>
       </View>
@@ -60,7 +73,7 @@ export default function App() {
         )}
       </View>
 
-      <View style={styles.tabbar}>
+      <View nativeID="app-tabbar" style={styles.tabbar}>
         {TABS.map((t) => (
           <Pressable key={t.key} onPress={() => setTab(t.key)} style={styles.tab}>
             <Text style={[styles.tabIcon, tab === t.key && styles.tabActive]}>{t.icon}</Text>
