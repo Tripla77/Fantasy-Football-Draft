@@ -9,9 +9,12 @@ const BG = '#0b1220'; // colors.bg from src/theme.ts
 
 const headTags = [
   // Match the app background so mobile browsers don't flash white bars in the
-  // status-bar / safe-area regions above and below the app.
+  // status-bar / safe-area regions above and below the app. Size the app to the
+  // dynamic viewport (dvh) so it fills the whole screen in an installed PWA —
+  // the default height:100% resolves to the small, address-bar-reserved
+  // viewport, leaving a dead band at the bottom in standalone mode.
   `<meta name="theme-color" content="${BG}" />`,
-  `<style>html,body{background-color:${BG}}</style>`,
+  `<style>html,body{background-color:${BG};height:100dvh}#root{height:100dvh}</style>`,
   // PWA: installable to the home screen.
   '<link rel="manifest" href="manifest.webmanifest" />',
   '<link rel="icon" type="image/svg+xml" href="icon.svg" />',

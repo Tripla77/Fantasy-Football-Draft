@@ -29,8 +29,14 @@ export function PlayerRow({ player, drafted, onDraft, onDraftMine, onUndraft }: 
           <TierBadge pos={player.pos} tier={player.tier} />
           <Text style={styles.meta}>{player.team}</Text>
           <Text style={styles.meta}>ADP {player.adp.toFixed(1)}</Text>
-          {player.injury ? <Text style={styles.injury}>{player.injury}</Text> : null}
         </View>
+        {player.injury ? (
+          <View style={styles.injuryRow}>
+            <Text style={styles.injuryBadge} numberOfLines={1}>
+              {player.injury}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.valueCol}>
@@ -110,10 +116,25 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     fontSize: 12,
   },
-  injury: {
+  // Injury status on its own line under the meta, as a compact chip, so a long
+  // label like "Questionable" can't overflow the name column into the values.
+  injuryRow: {
+    flexDirection: 'row',
+    marginTop: 5,
+  },
+  injuryBadge: {
     color: colors.warning,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    backgroundColor: 'rgba(240,169,76,0.14)',
+    borderColor: 'rgba(240,169,76,0.35)',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    overflow: 'hidden',
   },
   valueCol: {
     alignItems: 'flex-end',

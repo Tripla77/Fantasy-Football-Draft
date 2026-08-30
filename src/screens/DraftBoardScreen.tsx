@@ -4,7 +4,7 @@ import { PlayerRow } from '../components/PlayerRow';
 import { PositionFilter, PositionFilterValue } from '../components/PositionFilter';
 import { useDraftStore } from '../store/draftStore';
 import { RankedPlayer } from '../types';
-import { colors } from '../theme';
+import { colors, tabBarInset } from '../theme';
 
 type SortKey = 'rank' | 'vor' | 'adp';
 const FLEX_POS = ['RB', 'WR', 'TE'];
@@ -174,6 +174,6 @@ const styles = StyleSheet.create({
   toggleText: { color: colors.textDim, fontSize: 12, fontWeight: '600' },
   toggleTextActive: { color: colors.accent },
   count: { color: colors.textDim, fontSize: 12 },
-  list: { padding: 14, gap: 8 },
+  list: { padding: 14, gap: 8, paddingBottom: tabBarInset },
   empty: { color: colors.textDim, textAlign: 'center', marginTop: 40 },
 });

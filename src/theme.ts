@@ -1,5 +1,13 @@
 import { Position } from './types';
 
+/**
+ * Bottom padding for scrollable screen content so the last item clears the
+ * floating tab bar (~70px tall, sitting ~6–10px off the bottom) with a small
+ * gap, instead of being stuck underneath it. The nav is translucent, so
+ * mid-list content still scrolls under it.
+ */
+export const tabBarInset = 90;
+
 export const colors = {
   bg: '#0b1220',
   surface: '#141d30',
