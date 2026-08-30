@@ -6,19 +6,17 @@ on:
       - main
   workflow_dispatch:
 
-# Allow the workflow to publish to GitHub Pages.
+# Publishing to the gh-pages branch needs write access to repo contents.
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
-# One deploy at a time; don't cancel an in-progress deploy.
+# One production deploy at a time; don't cancel an in-progress deploy.
 concurrency:
-  group: pages
+  group: pages-production
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,48 +29,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Export web build
+      - name: Build web app
         # EXPO_BASE_URL makes assets resolve under the project-page subpath.
         env:
           EXPO_BASE_URL: /${{ github.event.repository.name }}
-        run: npx expo export --platform web
+        run: bash scripts/build-web.sh
 
-      - name: Prepare static output
-        run: |
-          # Bypass Jekyll so the _expo/ asset folder is served.
-          touch dist/.nojekyll
-          # Paint the page + mobile browser chrome to match the app's dark
-          # background (#0b1220, from src/theme.ts) so browsers don't show white
-          # bars in the status-bar / safe-area regions above and below the app.
-          node -e "const fs=require('fs');const f='dist/index.html';let h=fs.readFileSync(f,'utf8');h=h.replace('</head>','    <meta name=\"theme-color\" content=\"#0b1220\" />\n    <style>html,body{background-color:#0b1220}</style>\n  </head>');fs.writeFileSync(f,h);"
-          # SPA fallback so deep links / refreshes serve the app (after the
-          # theme injection so 404.html gets the same background).
-          cp dist/index.html dist/404.html
-
-      - name: Add PWA manifest, icons and safe-area meta
-        run: |
-          # Ship the home-screen icons + web manifest alongside the app.
-          cp web/manifest.webmanifest web/icon.svg web/icon-192.png \
-             web/icon-512.png web/apple-touch-icon.png dist/
-          # Wire them into index.html and the 404.html SPA fallback and enable
-          # safe-area insets (viewport-fit=cover).
-          node scripts/inject-web-head.mjs
-
-      - uses: actions/configure-pages@v5
-        # Try to enable Pages (Actions source) automatically on first run.
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          enablement: true
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          # Publish the app at the branch root, but keep the pr-preview/ folder
+          # (managed by the PR-preview workflow) so open previews survive a
+          # production deploy.
+          keep_files: true
