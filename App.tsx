@@ -36,6 +36,20 @@ export default function App() {
     hydrate();
   }, [hydrate]);
 
+  // On web, register the service worker so installed PWAs pick up new deploys
+  // automatically: it serves navigations network-first, so each relaunch loads
+  // the latest index.html (and its new hashed JS bundle) instead of a stale
+  // home-screen copy. No-ops in dev (no sw.js) and on native.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof navigator === 'undefined') return;
+    if (!('serviceWorker' in navigator)) return;
+    const register = () => navigator.serviceWorker.register('sw.js').catch(() => {});
+    // This effect runs after mount, which is usually at/after the load event, so
+    // register now if the page is already loaded; otherwise wait for load.
+    if (document.readyState === 'complete') register();
+    else window.addEventListener('load', register, { once: true });
+  }, []);
+
   // On web, give the nav an iOS-26-style "liquid glass" tab bar: a floating,
   // translucent, blurred capsule that the content scrolls underneath. Also pad
   // the header and tab bar by the device safe-area insets so they clear the
@@ -122,7 +136,9 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   brand: { color: colors.accent, fontWeight: '800', fontSize: 16 },
-  title: { color: colors.text, fontWeight: '700', fontSize: 20 },
+  // TEMP: red header title to verify the deploy/preview pipeline end-to-end.
+  // Revert to `colors.text` once confirmed.
+  title: { color: '#ff3b30', fontWeight: '700', fontSize: 20 },
   body: { flex: 1 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { color: colors.textDim },
