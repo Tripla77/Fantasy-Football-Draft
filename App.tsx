@@ -136,9 +136,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   brand: { color: colors.accent, fontWeight: '800', fontSize: 16 },
-  // TEMP: red header title to verify the deploy/preview pipeline end-to-end.
-  // Revert to `colors.text` once confirmed.
-  title: { color: '#ff3b30', fontWeight: '700', fontSize: 20 },
+  title: { color: colors.text, fontWeight: '700', fontSize: 20 },
   body: { flex: 1 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { color: colors.textDim },
