@@ -1,14 +1,18 @@
 // Post-processes the exported web build's HTML (dist/index.html and its SPA
-// fallback dist/404.html): enables safe-area insets and wires up the PWA
-// manifest, icons and mobile web-app meta tags so the site can be installed to
-// the home screen. Run in CI after `expo export`
-// (see .github/workflows/deploy-pages.yml). Pure fs — no dependencies.
+// fallback dist/404.html): matches the browser chrome to the app background,
+// enables safe-area insets, and wires up the PWA manifest, icons and mobile
+// web-app meta tags so the site can be installed to the home screen. Run in CI
+// after `expo export` (see scripts/build-web.sh). Pure fs — no dependencies.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 
-// theme-color and the html/body background are injected by the deploy
-// workflow's "Prepare static output" step, so they are intentionally omitted
-// here to avoid duplicate tags.
+const BG = '#0b1220'; // colors.bg from src/theme.ts
+
 const headTags = [
+  // Match the app background so mobile browsers don't flash white bars in the
+  // status-bar / safe-area regions above and below the app.
+  `<meta name="theme-color" content="${BG}" />`,
+  `<style>html,body{background-color:${BG}}</style>`,
+  // PWA: installable to the home screen.
   '<link rel="manifest" href="manifest.webmanifest" />',
   '<link rel="icon" type="image/svg+xml" href="icon.svg" />',
   '<link rel="apple-touch-icon" href="apple-touch-icon.png" />',
