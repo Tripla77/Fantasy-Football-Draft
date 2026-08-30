@@ -13,8 +13,8 @@ touch dist/.nojekyll
 # SPA fallback so deep links / refreshes serve the app. Copied before the head
 # injection, which patches both index.html and 404.html.
 cp dist/index.html dist/404.html
-# Ship the home-screen icons + web manifest alongside the app.
+# Ship the home-screen icons + web manifest + service worker alongside the app.
 cp web/manifest.webmanifest web/icon.svg web/icon-192.png \
-   web/icon-512.png web/apple-touch-icon.png dist/
+   web/icon-512.png web/apple-touch-icon.png web/sw.js dist/
 # Wire the manifest/icons/meta + safe-area viewport into the HTML.
 node scripts/inject-web-head.mjs

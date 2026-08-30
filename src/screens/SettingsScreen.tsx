@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { useDraftStore } from '../store/draftStore';
 import { DataSourceKind } from '../lib/dataSource';
 import { Settings } from '../types';
-import { colors, tabBarInset } from '../theme';
+import { colors } from '../theme';
 
 const SOURCE_LABEL: Record<DataSourceKind, string> = {
   live: 'Live · Sleeper API',
@@ -177,7 +177,7 @@ function Stepper({
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 14, gap: 8, paddingBottom: tabBarInset },
+  container: { padding: 14, gap: 8 },
   section: {
     color: colors.textDim,
     fontSize: 12,
