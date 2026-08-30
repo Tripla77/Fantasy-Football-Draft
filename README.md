@@ -25,7 +25,7 @@ Settings.
 Every push builds the web app and deploys it to GitHub Pages via
 `.github/workflows/deploy-pages.yml`. Once enabled it's live at:
 
-**https://aallisonvow.github.io/Fantasy-Football-Draft/**
+**https://tripla77.github.io/Fantasy-Football-Draft/**
 
 First-time setup (one switch): repo **Settings → Pages → Build and deployment →
 Source: GitHub Actions**. Then re-run the "Deploy web preview to GitHub Pages" workflow
