@@ -22,15 +22,26 @@ Settings.
 
 ## Live preview (GitHub Pages)
 
-Every push builds the web app and deploys it to GitHub Pages via
-`.github/workflows/deploy-pages.yml`. Once enabled it's live at:
+Every push to `main` builds the web app and publishes it to the `gh-pages`
+branch via `.github/workflows/deploy-pages.yml`. It's live at:
 
 **https://tripla77.github.io/Fantasy-Football-Draft/**
 
 First-time setup (one switch): repo **Settings → Pages → Build and deployment →
-Source: GitHub Actions**. Then re-run the "Deploy web preview to GitHub Pages" workflow
-(Actions tab) if the first run was before you flipped it. The CI build sets
+Source: Deploy from a branch → Branch: `gh-pages` / `(root)`**. The build sets
 `EXPO_BASE_URL` so assets resolve under the `/Fantasy-Football-Draft/` subpath.
+
+### Per-PR previews
+
+Every pull request is deployed to its own subfolder by
+`.github/workflows/pr-preview.yml`, so you can view (and install as a PWA) the
+exact change — separate from production — before merging:
+
+**https://tripla77.github.io/Fantasy-Football-Draft/pr-preview/pr-&lt;N&gt;/**
+
+The workflow comments the link on the PR, updates it on every push, and removes
+the subfolder when the PR closes. Production deploys keep the `pr-preview/`
+folder intact, so open previews survive a merge to `main`.
 
 ### Install as an app (PWA)
 
