@@ -36,9 +36,13 @@ jobs:
 
       - name: Build web app
         if: github.event.action != 'closed'
-        # Assets must resolve under the preview subpath.
+        # Assets must resolve under the preview subpath. EXPO_PUBLIC_SUPABASE_*
+        # (public values, set as repo Actions Variables) enable cloud sync in
+        # the preview too; absent -> local-only.
         env:
           EXPO_BASE_URL: /${{ github.event.repository.name }}/pr-preview/pr-${{ github.event.number }}
+          EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
         run: bash scripts/build-web.sh
 
       - name: Deploy / update / remove preview

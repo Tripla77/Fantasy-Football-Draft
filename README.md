@@ -61,6 +61,53 @@ npx sharp-cli -i web/icon.svg -o web/icon-192.png resize 192 192
 # ...or any SVG→PNG tool, exporting 192, 512 and a 180px apple-touch-icon.
 ```
 
+## Cloud sync (optional, free)
+
+Local storage (drafted players, your team, settings) is wiped when you clear your
+browser's cache/site data. Cloud sync backs the team up to a free
+[Supabase](https://supabase.com) project so it survives a clear and syncs across
+devices, identified by a **sync code** (no login). Without the keys below the app
+just runs local-only.
+
+**1. Create a Supabase project** (free tier) and open the **SQL editor**, then run:
+
+```sql
+create table if not exists draft_saves (
+  code       text primary key,
+  data       jsonb not null,
+  updated_at timestamptz not null default now()
+);
+-- Keep RLS on with no policies: the table is only reachable through the two
+-- SECURITY DEFINER functions below, so there's no direct/enumerable access.
+alter table draft_saves enable row level security;
+
+create or replace function put_draft_save(p_code text, p_data jsonb)
+returns void language sql security definer set search_path = public as $$
+  insert into draft_saves (code, data, updated_at)
+  values (p_code, p_data, now())
+  on conflict (code) do update set data = excluded.data, updated_at = now();
+$$;
+
+create or replace function get_draft_save(p_code text)
+returns jsonb language sql security definer set search_path = public as $$
+  select data from draft_saves where code = p_code;
+$$;
+
+grant execute on function put_draft_save(text, jsonb) to anon;
+grant execute on function get_draft_save(text) to anon;
+```
+
+**2. Add the keys.** From Supabase **Project Settings → API**, copy the **Project URL**
+and the **anon public** key. The anon key is safe to expose in a client, so add them
+as GitHub repo **Actions Variables** (Settings → Secrets and variables → Actions →
+Variables): `SUPABASE_URL` and `SUPABASE_ANON_KEY`. The deploy and preview workflows
+pass them to the build as `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+For local dev, put the same two `EXPO_PUBLIC_*` vars in a `.env` file.
+
+**3. Use it.** In the app: **Settings → Cloud sync → Enable cloud sync**. Copy the
+code it gives you and keep it somewhere safe. After a cache clear (or on another
+device), **Settings → Cloud sync → Restore from a code** brings your team back.
+
 ## Getting started
 
 ```bash
