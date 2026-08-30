@@ -7,6 +7,14 @@ import {
   DataSourceKind,
   fetchLivePlayers,
 } from '../lib/dataSource';
+import {
+  CloudPayload,
+  cloudLoad,
+  cloudSave,
+  generateSyncCode,
+  normalizeSyncCode,
+  syncConfigured,
+} from '../lib/sync';
 import { Player, RankedPlayer, Settings } from '../types';
 
 const STORAGE_KEY = 'ffdraft:v1';
@@ -14,10 +22,19 @@ const PLAYERS_KEY = 'ffdraft:players:v1';
 /** Auto-refresh the live dataset if the cache is older than this. */
 const STALE_MS = 12 * 60 * 60 * 1000; // 12 hours
 
+export type SyncState = 'idle' | 'saving' | 'synced' | 'error';
+/** Result of restoring from a code, for UI feedback. */
+export type RestoreResult = 'ok' | 'notfound' | 'error' | 'disabled';
+
 interface PersistedState {
   draftedIds: string[];
   myRosterIds: string[];
   settings: Settings;
+}
+
+/** The local blob also remembers the sync code (the cloud key). */
+interface LocalState extends PersistedState {
+  syncCode: string | null;
 }
 
 interface PersistedPlayers {
@@ -34,6 +51,10 @@ interface DraftState extends PersistedState {
   dataLoading: boolean;
   dataError: string | null;
 
+  /** Cloud sync code (null = sync off). Persisted locally; the cloud key. */
+  syncCode: string | null;
+  syncState: SyncState;
+
   draftPlayer: (id: string) => void;
   draftToMyTeam: (id: string) => void;
   undraftPlayer: (id: string) => void;
@@ -43,13 +64,46 @@ interface DraftState extends PersistedState {
   /** Fetch the live dataset from Sleeper. Falls back gracefully on failure. */
   refreshData: (opts?: { silent?: boolean }) => Promise<void>;
 
+  /** Turn on cloud sync: mint a code and push the current team to the cloud. */
+  enableSync: () => void;
+  /** Pull a team from the cloud by code and adopt that code going forward. */
+  restoreFromCode: (code: string) => Promise<RestoreResult>;
+  /** Stop syncing (keeps local + cloud data; just forgets the code locally). */
+  disableSync: () => void;
+
   allRanked: () => RankedPlayer[];
   availableRanked: () => RankedPlayer[];
   myRoster: () => Player[];
 }
 
-function persist(state: PersistedState) {
-  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(pickDraft(state))).catch(() => {});
+function cloudPayload(s: PersistedState): CloudPayload {
+  return { draftedIds: s.draftedIds, myRosterIds: s.myRosterIds, settings: s.settings };
+}
+
+// Debounced cloud push so rapid edits collapse into one write.
+let cloudTimer: ReturnType<typeof setTimeout> | null = null;
+function scheduleCloudSave(code: string, payload: CloudPayload) {
+  if (cloudTimer) clearTimeout(cloudTimer);
+  useDraftStore.setState({ syncState: 'saving' });
+  cloudTimer = setTimeout(() => {
+    cloudSave(code, payload)
+      .then(() => useDraftStore.setState({ syncState: 'synced' }))
+      .catch(() => useDraftStore.setState({ syncState: 'error' }));
+  }, 800);
+}
+
+/** Save locally, and (when sync is on) schedule a cloud push. */
+function persist(state: LocalState) {
+  const local: LocalState = {
+    draftedIds: state.draftedIds,
+    myRosterIds: state.myRosterIds,
+    settings: state.settings,
+    syncCode: state.syncCode,
+  };
+  AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(local)).catch(() => {});
+  if (state.syncCode && syncConfigured) {
+    scheduleCloudSave(state.syncCode, cloudPayload(state));
+  }
 }
 
 function persistPlayers(p: PersistedPlayers) {
@@ -66,6 +120,8 @@ export const useDraftStore = create<DraftState>((set, get) => ({
   fetchedAt: null,
   dataLoading: false,
   dataError: null,
+  syncCode: null,
+  syncState: 'idle',
 
   draftPlayer: (id) =>
     set((s) => {
@@ -109,17 +165,70 @@ export const useDraftStore = create<DraftState>((set, get) => ({
       return next;
     }),
 
+  enableSync: () =>
+    set((s) => {
+      if (!syncConfigured) return s;
+      const next = { ...s, syncCode: generateSyncCode(), syncState: 'saving' as SyncState };
+      persist(next); // writes local + schedules the first cloud push
+      return next;
+    }),
+
+  restoreFromCode: async (input) => {
+    if (!syncConfigured) return 'disabled';
+    const code = normalizeSyncCode(input);
+    if (!code) return 'error';
+    try {
+      const data = await cloudLoad(code);
+      if (!data) return 'notfound';
+      set((s) => {
+        const next = {
+          ...s,
+          draftedIds: data.draftedIds ?? [],
+          myRosterIds: data.myRosterIds ?? [],
+          settings: { ...DEFAULT_SETTINGS, ...(data.settings ?? {}) },
+          syncCode: code,
+          syncState: 'synced' as SyncState,
+        };
+        // Persist the adopted code + pulled data locally. Skip the immediate
+        // cloud push (we just pulled it); edits from here on will sync.
+        AsyncStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            draftedIds: next.draftedIds,
+            myRosterIds: next.myRosterIds,
+            settings: next.settings,
+            syncCode: code,
+          } as LocalState)
+        ).catch(() => {});
+        return next;
+      });
+      return 'ok';
+    } catch {
+      return 'error';
+    }
+  },
+
+  disableSync: () =>
+    set((s) => {
+      const next = { ...s, syncCode: null, syncState: 'idle' as SyncState };
+      persist(next);
+      return next;
+    }),
+
   hydrate: async () => {
-    // Draft state.
+    // Draft state (+ sync code) from local storage.
+    let syncCode: string | null = null;
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as Partial<PersistedState>;
+        const parsed = JSON.parse(raw) as Partial<LocalState>;
+        syncCode = parsed.syncCode ?? null;
         set((s) => ({
           ...s,
           draftedIds: parsed.draftedIds ?? [],
           myRosterIds: parsed.myRosterIds ?? [],
           settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
+          syncCode,
         }));
       }
     } catch {
@@ -147,6 +256,27 @@ export const useDraftStore = create<DraftState>((set, get) => ({
     }
 
     set((s) => ({ ...s, hydrated: true }));
+
+    // If sync is on, pull the latest team from the cloud in the background so
+    // edits made on another device (or since this device last synced) win.
+    if (syncCode && syncConfigured) {
+      set((s) => ({ ...s, syncState: 'saving' }));
+      cloudLoad(syncCode)
+        .then((data) => {
+          if (data) {
+            set((s) => ({
+              ...s,
+              draftedIds: data.draftedIds ?? s.draftedIds,
+              myRosterIds: data.myRosterIds ?? s.myRosterIds,
+              settings: { ...DEFAULT_SETTINGS, ...(data.settings ?? {}) },
+              syncState: 'synced',
+            }));
+          } else {
+            set((s) => ({ ...s, syncState: 'synced' }));
+          }
+        })
+        .catch(() => set((s) => ({ ...s, syncState: 'error' })));
+    }
 
     // Auto-refresh from the live source if we've never fetched or the cache is stale.
     const stale = cachedAt == null || Date.now() - cachedAt > STALE_MS;
@@ -201,7 +331,3 @@ export const useDraftStore = create<DraftState>((set, get) => ({
     return get().players.filter((p) => ids.has(p.id));
   },
 }));
-
-function pickDraft(s: PersistedState): PersistedState {
-  return { draftedIds: s.draftedIds, myRosterIds: s.myRosterIds, settings: s.settings };
-}

@@ -31,8 +31,12 @@ jobs:
 
       - name: Build web app
         # EXPO_BASE_URL makes assets resolve under the project-page subpath.
+        # EXPO_PUBLIC_SUPABASE_* enable cloud sync (public values; set as repo
+        # Actions Variables). Absent -> the app runs local-only.
         env:
           EXPO_BASE_URL: /${{ github.event.repository.name }}
+          EXPO_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
         run: bash scripts/build-web.sh
 
       - name: Publish to gh-pages

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useDraftStore } from '../store/draftStore';
+import { SyncCard } from '../components/SyncCard';
 import { DataSourceKind } from '../lib/dataSource';
 import { Settings } from '../types';
 import { colors, tabBarInset } from '../theme';
@@ -96,6 +97,9 @@ export function SettingsScreen() {
           </Text>
         )}
       </View>
+
+      <Text style={styles.section}>Cloud sync</Text>
+      <SyncCard />
 
       <Text style={styles.section}>Scoring</Text>
       <View style={styles.segment}>
