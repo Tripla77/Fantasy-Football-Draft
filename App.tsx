@@ -47,12 +47,11 @@ export default function App() {
     el.textContent =
       '#app-header{padding-top:calc(14px + env(safe-area-inset-top,0px))}' +
       '#app-tabbar{' +
-      // Rest just above the home-indicator safe area. Installed as a PWA,
-      // env(safe-area-inset-bottom) is the ~34px indicator inset; a browser
-      // reports ~0 (its own toolbar owns that space) so max() keeps a small
-      // 10px float there. Adding a margin *on top* of the inset (the old
-      // 12px + env) sat too high once installed.
-      'bottom:max(10px,env(safe-area-inset-bottom));' +
+      // Float just above the home indicator. The safe-area inset (~34px in an
+      // installed PWA) overshoots the indicator's actual height, so resting at
+      // the full inset still looks too high; trim a fixed amount off it to hug
+      // closer. A browser reports ~0, so max() keeps a small 8px float there.
+      'bottom:max(8px,calc(env(safe-area-inset-bottom) - 16px));' +
       'padding-bottom:8px;' +
       'background:linear-gradient(180deg,rgba(31,43,68,0.78),rgba(15,22,38,0.70));' +
       'backdrop-filter:blur(22px) saturate(160%);' +
